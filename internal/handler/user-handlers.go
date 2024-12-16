@@ -31,15 +31,11 @@ func UserRegistration(storage commonTypes.Storager) http.HandlerFunc {
 			return
 		}
 
-		token, err := auth.CreateNewJWTToken(userID)
-		if err != nil {
-			// #TODO add err logging
+		if err := auth.Authtorization(userID, w); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		cookie := &http.Cookie{Name: "user_id", Value: token}
-		http.SetCookie(w, cookie)
 		w.WriteHeader(http.StatusOK)
 	})
 }
@@ -51,23 +47,19 @@ func UserLogin(storage commonTypes.Storager) http.HandlerFunc {
 			return
 		}
 
-		// # TODO implement hashing of login and password
+		service.HashSumUserCreds(&uc)
+
 		userID := storage.GetUserID(r.Context(), uc)
 		if userID == 0 {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-
-		token, err := auth.CreateNewJWTToken(userID)
-		if err != nil {
-			// #TODO add err logging
+		
+		if err := auth.Authtorization(userID, w); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		cookie := &http.Cookie{Name: "user_id", Value: token}
-		http.SetCookie(w, cookie)
 		w.WriteHeader(http.StatusOK)
 	})
-
 }

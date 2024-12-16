@@ -2,6 +2,7 @@ package jwtauth
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -47,3 +48,16 @@ func PasreJWTToken(tokenStr string) (Claims, error) {
 	return *claims, nil
 
 }
+
+func Authtorization(userID uint, w http.ResponseWriter) error {
+	token, err := CreateNewJWTToken(userID)
+	if err != nil {
+		// #TODO add err logging
+		return err
+	}
+
+	cookie := &http.Cookie{Name: "Authtorization", Value: token}
+	http.SetCookie(w, cookie)
+	
+	return nil
+}  
