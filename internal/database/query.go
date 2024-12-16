@@ -3,10 +3,10 @@ package database
 import (
 	"context"
 
-	commonTypes "github.com/PhenHF/gophemart/internal/common"
+	"github.com/PhenHF/gophemart/internal/common"
 )
 
-func (db *DataBase) CreateNewUser(ctx context.Context, user commonTypes.User) (uint, error) {
+func (db *DataBase) InsertNewUser(ctx context.Context, user common.User) (uint, error) {
 	tx, err := db.Begin()
 	if err != nil {
 		return 0, err
@@ -19,7 +19,7 @@ func (db *DataBase) CreateNewUser(ctx context.Context, user commonTypes.User) (u
 		return 0, err
 	}
 
-	userID := db.GetUserID(ctx, user)
+	userID := db.SelectUserID(ctx, user)
 
 	err = tx.Commit()
 	if err != nil {
@@ -29,7 +29,7 @@ func (db *DataBase) CreateNewUser(ctx context.Context, user commonTypes.User) (u
 	return userID, nil
 }
 
-func (db *DataBase) GetUserID(ctx context.Context, user commonTypes.User) uint {
+func (db *DataBase) SelectUserID(ctx context.Context, user common.User) uint {
 	query := `SELECT id FROM user WHERE login=$1 AND passowrd=$2`
 	row := db.QueryRowContext(ctx, query, user.Login, user.Password)
 	var userID uint
@@ -41,4 +41,19 @@ func (db *DataBase) GetUserID(ctx context.Context, user commonTypes.User) uint {
 
 	return userID
 
+}
+
+func (db *DataBase) IsertOrder(ctx context.Context, ch chan bool) (bool, error) {
+	// query := `INSERT INTO order (number, status, uploaded_at, user_id, accrual) 
+	// 		VALUES($1, $2, $3, $4, $5)`
+	
+	query := `SELECT user_id FROM order WHERE nubmer=$1`
+
+	row := db.QueryRowContext(ctx, query)
+
+	if ok := <- ch; !ok {
+		
+	}
+
+	return true, nil
 }

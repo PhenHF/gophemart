@@ -7,7 +7,11 @@ type User struct {
 	Password string `json:"password"`
 }
 
+type UploadOrder struct {
+	Number uint `json:"number"`
+}
+
 type Storager interface {
-	CreateNewUser(ctx context.Context, user User) (uint, error)
-	GetUserID(ctx context.Context, user User) uint
+	InsertNewUser(ctx context.Context, user User) (uint, error)
+	SelectUserID(ctx context.Context, user User) uint
 }

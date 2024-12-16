@@ -61,3 +61,17 @@ func Authtorization(userID uint, w http.ResponseWriter) error {
 	
 	return nil
 }  
+
+func CheckAuth(r *http.Request) uint {
+	token, err := r.Cookie("Authtorization")
+	if err != nil {
+		return 0
+	}
+
+	c, err := PasreJWTToken(token.Value)
+	if err != nil {
+		return 0
+	}
+
+	return c.UserID
+}
