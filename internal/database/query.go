@@ -20,7 +20,7 @@ func (db *DataBase) CreateNewUser(ctx context.Context, user commonTypes.User) (u
 	}
 
 	userID := db.GetUserID(ctx, user)
-	
+
 	err = tx.Commit()
 	if err != nil {
 		return 0, err
@@ -40,6 +40,5 @@ func (db *DataBase) GetUserID(ctx context.Context, user commonTypes.User) uint {
 	}
 
 	return userID
-
 
 }

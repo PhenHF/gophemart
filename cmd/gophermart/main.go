@@ -9,4 +9,3 @@ func main() {
 	storage := database.NewDataBaseConnection()
 	server.RunServer(storage)
 }
-

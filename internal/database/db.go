@@ -13,7 +13,7 @@ func NewDataBaseConnection() *DataBase {
 		panic(err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	if err = storage.PingContext(ctx); err != nil {

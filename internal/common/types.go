@@ -3,7 +3,7 @@ package common
 import "context"
 
 type User struct {
-	Login string `json:"login"`
+	Login    string `json:"login"`
 	Password string `json:"password"`
 }
 

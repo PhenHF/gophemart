@@ -10,7 +10,7 @@ import (
 func CreateNewJWTToken(userID uint) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add((time.Hour * 3))),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add((time.Minute * 5))),
 		},
 
 		UserID: userID,
@@ -25,7 +25,7 @@ func CreateNewJWTToken(userID uint) (string, error) {
 	return tokenStr, nil
 }
 
-func PasreJWTToken(tokenStr string) (Claims, error){
+func PasreJWTToken(tokenStr string) (Claims, error) {
 	claims := &Claims{}
 
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
@@ -37,12 +37,11 @@ func PasreJWTToken(tokenStr string) (Claims, error){
 	})
 
 	if err != nil {
-		return Claims{}, err
+		return *claims, err
 	}
 
 	if !token.Valid {
-		// #TODO implement errorType for invalid token
-		return Claims{}, fmt.Errorf("token is not valid")
+		return *claims, newInvalidTokenError(nil)
 	}
 
 	return *claims, nil

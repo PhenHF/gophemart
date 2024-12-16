@@ -6,7 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func buildRt(storage commonTypes.Storager) *chi.Mux{
+func buildRt(storage commonTypes.Storager) *chi.Mux {
 	rt := chi.NewRouter()
 
 	rt.Post(`/api/user/register`, handler.UserRegistration(storage))

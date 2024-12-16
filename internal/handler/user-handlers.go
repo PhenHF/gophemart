@@ -5,11 +5,12 @@ import (
 	"net/http"
 
 	commonTypes "github.com/PhenHF/gophemart/internal/common"
+	"github.com/PhenHF/gophemart/internal/service"
 	auth "github.com/PhenHF/gophemart/pkg/jwtauth"
 )
 
 func UserRegistration(storage commonTypes.Storager) http.HandlerFunc {
-	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		uc := commonTypes.User{}
 		if err := json.NewDecoder(r.Body).Decode(&uc); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -20,6 +21,8 @@ func UserRegistration(storage commonTypes.Storager) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+
+		service.HashSumUserCreds(&uc)
 
 		userID, err := storage.CreateNewUser(r.Context(), uc)
 		if err != nil {
@@ -38,7 +41,7 @@ func UserRegistration(storage commonTypes.Storager) http.HandlerFunc {
 		cookie := &http.Cookie{Name: "user_id", Value: token}
 		http.SetCookie(w, cookie)
 		w.WriteHeader(http.StatusOK)
-	})		
+	})
 }
 func UserLogin(storage commonTypes.Storager) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -48,6 +51,7 @@ func UserLogin(storage commonTypes.Storager) http.HandlerFunc {
 			return
 		}
 
+		// # TODO implement hashing of login and password
 		userID := storage.GetUserID(r.Context(), uc)
 		if userID == 0 {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -65,5 +69,5 @@ func UserLogin(storage commonTypes.Storager) http.HandlerFunc {
 		http.SetCookie(w, cookie)
 		w.WriteHeader(http.StatusOK)
 	})
-}
 
+}
