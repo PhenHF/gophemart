@@ -1,8 +1,12 @@
 package main
 
-import "github.com/PhenHF/gophemart/internal/server"
+import (
+	"github.com/PhenHF/gophemart/internal/database"
+	"github.com/PhenHF/gophemart/internal/server"
+)
 
 func main() {
-	server.RunServer()
+	storage := database.NewDataBaseConnection()
+	server.RunServer(storage)
 }
 
