@@ -1,11 +1,15 @@
 package service
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
-func convertBodyToInt(order []byte) int {
-	orderInt, err := strconv.Atoi(string(order)) 
+func ConvertBodyToInt(order []byte) int {
+	orderInt, err := strconv.ParseUint(string(order), 10, 64)
 	if err != nil {
+		fmt.Println(err)
 		return 0
 	}
-	return orderInt
+	return int(orderInt)
 }

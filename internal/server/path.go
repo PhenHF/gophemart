@@ -11,6 +11,6 @@ func buildRt(storage common.Storager) *chi.Mux {
 
 	rt.Post(`/api/user/register`, handler.UserRegistration(storage))
 	rt.Post(`/api/user/login`, handler.UserLogin(storage))
-	rt.Post(`/api/user/orders`, nil)
+	rt.Post(`/api/user/orders`, handler.UploadUserOrder(storage))
 	return rt
 }
