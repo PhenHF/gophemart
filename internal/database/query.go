@@ -11,6 +11,7 @@ import (
 
 func (db *DataBase) InsertNewUser(ctx context.Context, user common.User) (uint, error) {
 	tx, err := db.Begin()
+	defer tx.Rollback()
 	if err != nil {
 		return 0, err
 	}
@@ -22,7 +23,18 @@ func (db *DataBase) InsertNewUser(ctx context.Context, user common.User) (uint, 
 		return 0, err
 	}
 
-	userID := db.SelectUserID(ctx, user)
+	query = `SELECT id FROM users WHERE login=$1 AND password=$2`
+	var userID uint
+	err = tx.QueryRowContext(ctx, query, user.Login, user.Password).Scan(&userID)
+	if err != nil && err != sql.ErrNoRows{
+		return 0, nil
+	}
+
+	query = `INSERT INTO balance (sum, user_id) VALUES ($1, $2)`
+	_, err = tx.ExecContext(ctx, query, 0, userID)
+	if err != nil {
+		return 0, err
+	}
 
 	err = tx.Commit()
 	if err != nil {
@@ -112,5 +124,104 @@ func (db *DataBase) SelectAllUserOrders(ctx context.Context, orders *[]common.Or
 		return err
 	}
 
+	return nil
+}
+
+func (db *DataBase) UpdateBalance(ctx context.Context, userID uint, sum uint) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	query := `SELECT sum FROM balance WHERE user_id=$1`
+	var userBalance uint
+	err = tx.QueryRowContext(ctx, query, userID).Scan(&userBalance)
+	if err != nil {
+		return err
+	}
+
+	query = `UPDATE balance SET sum=$1 WHERE user_id=$2`
+	
+	userBalance += sum
+	_, err = tx.ExecContext(ctx, query, userBalance, userID)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (db *DataBase) SelectCurrentBalance(ctx context.Context, userID uint, balance common.Balance) error {
+	query := `SELECT balance.sum, SUM(withdrawal.sum) FROM balance
+			JOIN withdrawal ON balance.user_id = withdrawal.user_id
+			GROUP BY balance.sum, balance.user_id
+			HAVING balance.user_id=$1`
+	
+	err := db.QueryRowContext(ctx, query, userID).Scan(&balance.Current, balance.Withdrawn)
+	if err != nil {
+		return nil
+	}
+
+	return nil
+} 
+
+func (db *DataBase) UpdatePointsForAnOrders(ctx context.Context, userID, order, sum uint) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	query := `SELECT sum FROM balance WHERE user_id=$1`
+	var userBalance uint
+	err = tx.QueryRowContext(ctx, query, userID).Scan(&userBalance)
+	if err != nil {
+		return err
+	}
+
+	if userBalance < sum {
+		return NewSumGreaterBalance(nil)
+	}
+
+	query = `UPDATE balance SET sum=$1 WHERE user_id=$2`
+	_, err = tx.ExecContext(ctx, query, userBalance - sum, userID)
+	if err != nil {
+		return err
+	}
+
+	query = `INSERT INTO withdrawal (number, sum, processed_at, user_id)`
+	_, err = tx.ExecContext(ctx, query, order, sum, time.Now().Format(time.RFC3339), userID)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (db *DataBase) SelectAllUsersWithdrawals(ctx context.Context, userID uint, withdrawals *[]common.Withdrawal) error {
+	query := `SELECT number, sum, processed_at FROM withdrawal WHERE user_id=$1`
+	
+	rows, err := db.QueryContext(ctx, query, userID)
+	if err != nil && err != sql.ErrNoRows{
+		return err
+	}
+	defer rows.Close()
+	
+	for rows.Next() {
+		var w common.Withdrawal
+		err = rows.Scan(&w.Number, &w.Sum, &w.ProcessedAt)
+		if err != nil {
+			continue
+		}
+		
+		*withdrawals = append(*withdrawals, w)
+	}
+	
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
+	
 	return nil
 }

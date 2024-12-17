@@ -57,12 +57,10 @@ func UploadUserOrder(storage common.Storager) http.HandlerFunc {
 				return
 			}
 		}
-
-		// #TODO implement send request on /api/orders/{number}
-
+		
 		order := &common.Order{
 			Number: uint(orderInt),
-			Status: "OK",
+			Status: "NEW",
 			UserID: userID,
 		}
 

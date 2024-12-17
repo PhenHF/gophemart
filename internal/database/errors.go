@@ -34,5 +34,20 @@ func NewOrderAlreadyExists(order int, err error) error {
 	}
 }
 
+type SumGreaterBalance struct {
+	Err error
+}
+
+func (alb *SumGreaterBalance) Error() string {
+	return "Sum is greater than balance"
+}
+
+func NewSumGreaterBalance(err error) error {
+	return &SumGreaterBalance{
+		Err: err,
+	}
+}
+
 var OrderAlreadyExistsError *OrderAlreadyExists
 var OrderAlreadyExistsForAnotherUserError *OrderAlreadyExistsForAnotherUser
+var SumGreaterBalanceError *SumGreaterBalance

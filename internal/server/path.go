@@ -13,5 +13,7 @@ func buildRt(storage common.Storager) *chi.Mux {
 	rt.Post(`/api/user/login`, handler.UserLogin(storage))
 	rt.Post(`/api/user/orders`, handler.UploadUserOrder(storage))
 	rt.Get(`/api/user/orders`, handler.GetUserOrders(storage))
+	rt.Post(`/api/user/balance/withdraw`, handler.WriteOffPointsForPayMents(storage))
+	rt.Get(`/api/user/withdrawals`, handler.GetInfoAboutWithdrawal(storage))
 	return rt
 }

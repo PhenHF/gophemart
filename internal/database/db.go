@@ -62,8 +62,8 @@ func createTables(storage *sql.DB) {
 
 	query = `CREATE TABLE IF NOT EXISTS withdrawal (
 		"id" SERIAL PRIMARY KEY,
-		"order" bigint UNIQUE NOT NULL,
-		"sum" bigint NOT NULL,
+		"number" bigint UNIQUE NOT NULL,
+		"sum" bigint,
 		"processed_at" text,
 		"user_id" bigint REFERENCES users
 	)`
