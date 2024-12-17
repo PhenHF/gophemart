@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -72,5 +73,37 @@ func UploadUserOrder(storage common.Storager) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusAccepted)
+	})
+}
+
+func GetUserOrders(storage common.Storager) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		orders := make([]common.Order, 0)
+
+		userID := auth.CheckAuth(r)
+
+		err := storage.SelectAllUserOrders(r.Context(), &orders, userID)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		if len(orders) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		response, err := json.Marshal(orders)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(response)
+
 	})
 }

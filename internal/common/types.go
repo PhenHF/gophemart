@@ -22,4 +22,5 @@ type Storager interface {
 	SelectUserID(ctx context.Context, user User) uint
 	CheckOrderInDB(ctx context.Context, order int, userID uint) error
 	InsertOrder(ctx context.Context, order Order) error 
+	SelectAllUserOrders(ctx context.Context, orders *[]Order, userID uint) error
 }

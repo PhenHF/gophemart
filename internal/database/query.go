@@ -88,3 +88,29 @@ func (db *DataBase) InsertOrder(ctx context.Context, order common.Order) error {
 	return nil
 }
 
+func (db *DataBase) SelectAllUserOrders(ctx context.Context, orders *[]common.Order, userID uint) error {
+	query := `SELECT number, status, accrual, uploaded_at FROM orders WHERE user_id=$1`
+
+	rows, err := db.QueryContext(ctx, query, userID)
+	if err != nil && err != sql.ErrNoRows{
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var o common.Order
+		err = rows.Scan(&o.Number, &o.Status, &o.Accrual, &o.UploadedAt)
+		if err != nil {
+			continue
+		}
+
+		*orders = append(*orders, o)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
