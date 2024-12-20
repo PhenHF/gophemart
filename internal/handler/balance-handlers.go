@@ -2,10 +2,12 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/PhenHF/gophemart/internal/common"
+	"github.com/PhenHF/gophemart/internal/database"
 	"github.com/PhenHF/gophemart/internal/service"
 	auth "github.com/PhenHF/gophemart/pkg/jwtauth"
 )
@@ -20,13 +22,14 @@ func GetUserBalance(storage common.Storager) http.HandlerFunc {
 
 		balance := &common.Balance{}
 
-		err := storage.SelectCurrentBalance(r.Context(), userID, *balance)
+		err := storage.SelectCurrentBalance(r.Context(), userID, balance)
 		if err != nil {
 			fmt.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
+		fmt.Println(balance)
 		response, err := json.Marshal(balance)
 		if err != nil {
 			fmt.Println(err)
@@ -66,6 +69,14 @@ func WriteOffPointsForPayMents(storage common.Storager) http.HandlerFunc {
 
 		err = storage.UpdatePointsForAnOrders(r.Context(), userID, WriteOffReques.Order, WriteOffReques.Sum)
 		if err != nil {
+			switch {
+			case errors.As(err, &database.SumGreaterBalanceError):
+				w.WriteHeader(http.StatusPaymentRequired)
+			default:
+				fmt.Println(err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 			// #TODO implemen switch case for errs
 			return
 		}

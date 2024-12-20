@@ -127,6 +127,17 @@ func (db *DataBase) SelectAllUserOrders(ctx context.Context, orders *[]common.Or
 	return nil
 }
 
+func (db *DataBase) UpdateOrder(ctx context.Context, order common.Order) error {
+	query := `UPDATE orders SET status=$1, accrual=$2 WHERE number=$3`
+
+	_, err := db.ExecContext(ctx, query, order.Status, order.Accrual, order.Number)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (db *DataBase) UpdateBalance(ctx context.Context, userID uint, sum uint) error {
 	tx, err := db.Begin()
 	if err != nil {
@@ -152,17 +163,18 @@ func (db *DataBase) UpdateBalance(ctx context.Context, userID uint, sum uint) er
 	return tx.Commit()
 }
 
-func (db *DataBase) SelectCurrentBalance(ctx context.Context, userID uint, balance common.Balance) error {
-	query := `SELECT balance.sum, SUM(withdrawal.sum) FROM balance
-			JOIN withdrawal ON balance.user_id = withdrawal.user_id
+func (db *DataBase) SelectCurrentBalance(ctx context.Context, userID uint, balance *common.Balance) error {
+	query := `SELECT balance.sum, COALESCE(SUM(withdrawal.sum), 0) FROM balance
+			FULL JOIN withdrawal ON balance.user_id = withdrawal.user_id
 			GROUP BY balance.sum, balance.user_id
 			HAVING balance.user_id=$1`
-	
-	err := db.QueryRowContext(ctx, query, userID).Scan(&balance.Current, balance.Withdrawn)
-	if err != nil {
-		return nil
-	}
+	// query := `SELECT sum FROM balance WHERE user_id=$1`
 
+	err := db.QueryRowContext(ctx, query, userID).Scan(&balance.Current, &balance.Withdrawn)
+	if err != nil {
+		return err
+	}
+	
 	return nil
 } 
 
@@ -190,9 +202,10 @@ func (db *DataBase) UpdatePointsForAnOrders(ctx context.Context, userID, order, 
 		return err
 	}
 
-	query = `INSERT INTO withdrawal (number, sum, processed_at, user_id)`
+	query = `INSERT INTO withdrawal (number, sum, processed_at, user_id) VALUES ($1, $2, $3, $4)`
 	_, err = tx.ExecContext(ctx, query, order, sum, time.Now().Format(time.RFC3339), userID)
 	if err != nil {
+		fmt.Println(1)
 		return err
 	}
 

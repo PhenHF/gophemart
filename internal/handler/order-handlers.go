@@ -13,7 +13,7 @@ import (
 	auth "github.com/PhenHF/gophemart/pkg/jwtauth"
 )
 
-func UploadUserOrder(storage common.Storager) http.HandlerFunc {
+func UploadUserOrder(storage common.Storager, QueueNewOrderCh chan common.Order) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {		
 		userID := auth.CheckAuth(r)
 
@@ -63,6 +63,7 @@ func UploadUserOrder(storage common.Storager) http.HandlerFunc {
 			Status: "NEW",
 			UserID: userID,
 		}
+		QueueNewOrderCh <- *order
 
 		err = storage.InsertOrder(r.Context(), *order)
 		if err != nil {

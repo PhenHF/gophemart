@@ -13,8 +13,8 @@ type Order struct {
 	Number uint `json:"number"`
 	Status string `json:"status"`
 	Accrual int `json:"accrual,omitempty"`
-	UploadedAt string `json:"uploaded_at"`
-	UserID uint
+	UploadedAt string `json:"uploaded_at,omitempty"`
+	UserID uint `json:"-"`
 }
 
 type Balance struct {
@@ -34,7 +34,9 @@ type Storager interface {
 	CheckOrderInDB(ctx context.Context, order int, userID uint) error
 	InsertOrder(ctx context.Context, order Order) error 
 	SelectAllUserOrders(ctx context.Context, orders *[]Order, userID uint) error
-	SelectCurrentBalance(ctx context.Context, userID uint, balance Balance) error
+	SelectCurrentBalance(ctx context.Context, userID uint, balance *Balance) error
 	UpdatePointsForAnOrders(ctx context.Context, userID, order, sum uint) error
 	SelectAllUsersWithdrawals(ctx context.Context, userID uint, withdrawals *[]Withdrawal) error
-}
+	UpdateOrder(ctx context.Context, order Order) error
+	UpdateBalance(ctx context.Context, userID uint, sum uint) error
+} 
